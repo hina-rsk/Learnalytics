@@ -1,0 +1,27 @@
+# Uploads (user-generated content)
+uploads/assignments/*
+uploads/lessons/*
+uploads/student_profiles/*
+uploads/submissions/*
+!uploads/.htaccess
+!uploads/index.php
+
+# Debug/test files with credentials
+dbtest.php
+phpinfo_test.php
+
+# Temp/debug files
+*.txt
+!README.md
+
+# System files
+.DS_Store
+Thumbs.db
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Environment
+.env

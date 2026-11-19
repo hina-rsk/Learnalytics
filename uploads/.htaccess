@@ -1,0 +1,17 @@
+# Protect uploads directory
+<FilesMatch "\.(php|php3|php4|php5|phtml)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# Allow access to uploaded files (documents)
+<FilesMatch "\.(pdf|doc|docx|ppt|pptx|mp4|txt|xlsx|zip)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# Allow access to uploaded image files (for student profiles)
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|svg)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>

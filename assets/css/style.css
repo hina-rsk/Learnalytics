@@ -1,0 +1,227 @@
+/* ============================================================
+   LearnAlytics — style.css (legacy overrides, kept minimal)
+   Main design system is in main.css
+   ============================================================ */
+
+/* Feather icons */
+.feather {
+    width: 16px;
+    height: 16px;
+    vertical-align: text-bottom;
+}
+
+/* Sidebar nav-link overrides (legacy compat) */
+.sidebar .nav-link .feather {
+    margin-right: 4px;
+    color: #727272;
+}
+
+.sidebar .nav-link:hover .feather,
+.sidebar .nav-link.active .feather {
+    color: inherit;
+}
+
+/* Navbar */
+.navbar .form-control {
+    padding: 0.75rem 1rem;
+    border-width: 0;
+    border-radius: 0;
+}
+
+.form-control-dark {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.form-control-dark:focus {
+    border-color: transparent;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+}
+
+/* Form login (standalone, non-dashboard) */
+.form-signin {
+    width: 100%;
+    max-width: 330px;
+    padding: 15px;
+    margin: auto;
+}
+
+/* Dashboard card (legacy) */
+.dashboard-card {
+    border: none;
+    border-radius: 18px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 32px rgba(15, 23, 42, 0.08);
+}
+
+.dashboard-card .card-body {
+    padding: 1.5rem;
+}
+
+.dashboard-card-title {
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #475569;
+    margin-bottom: 0.75rem;
+}
+
+.dashboard-card-value {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+/* Summary list */
+.dashboard-summary-list .list-group-item {
+    border: 1px solid rgba(209, 213, 219, 0.65);
+    border-radius: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.dashboard-summary-list .list-group-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Course content tabs */
+.subject-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0.25rem 0 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid rgba(37, 99, 235, 0.28);
+}
+
+.subject-page-title {
+    margin: 0;
+    color: #1e3a8a;
+    font-weight: 800;
+    font-size: clamp(2rem, 3vw, 3rem);
+    line-height: 1.2;
+}
+
+.subject-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 180px;
+}
+
+.subject-action-btn {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    color: #fff;
+    border: none;
+    padding: 0.6rem 0.95rem;
+    border-radius: 0.7rem;
+    font-weight: 600;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+}
+
+.subject-action-btn.light {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+}
+
+.subject-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0.5rem 0.9rem;
+    border-radius: 0.7rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.subject-status-badge.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.subject-status-badge.archived {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    color: white;
+}
+
+.course-content .card-body {
+    padding: 1rem 1.25rem;
+}
+
+.course-content .tab-content {
+    min-height: 140px;
+}
+
+.course-content .list-group-item {
+    background: #ffffff;
+    color: #1e3a8a;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    display: block;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(15, 23, 42, 0.04);
+}
+
+.course-content .list-group-item a,
+.course-content .list-group-item .text-muted {
+    color: inherit;
+}
+
+.course-content .list-group-item h6 {
+    color: #1e3a8a !important;
+    font-weight: 700;
+}
+
+.course-content .card-body { overflow: visible; }
+
+.course-content .nav-tabs .nav-link {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+}
+
+.course-content .nav-tabs .nav-link.active {
+    border-color: transparent transparent var(--secondary-blue) transparent;
+    color: var(--primary-blue);
+    font-weight: 700;
+}
+
+.subject-description-card .card-body {
+    padding: 1.4rem 1.4rem 1.1rem;
+}
+
+.subject-description-card .card-text {
+    margin-bottom: 0.9rem;
+    line-height: 1.75;
+    color: #0f172a;
+}
+
+.subject-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem 1rem;
+    margin-top: 0.75rem;
+}
+
+@media (max-width: 767px) {
+    .subject-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .subject-header-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .subject-meta-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,1 @@
+ALTER TABLE lessons ADD COLUMN topic VARCHAR(255) NULL AFTER title;
