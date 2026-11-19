@@ -134,8 +134,20 @@ if ($dept_id) {
     // 1. Fetch active configurable thresholds
     $activeThresholds = RiskAssessmentService::getThresholds($pdo, $dept_id);
 
-    // 2. Department summary and multi-factor student risk profiles
-    $deptSummary = RiskAssessmentService::getDepartmentSummary($pdo, $dept_id);
+    // 2. Department summary with SESSION CACHING (risk calc is very expensive: N students × 8 queries each)
+    $cacheKey = 'dean_dept_summary_' . $dept_id;
+    $cacheExpiry = 600; // 10 minutes
+    if (
+        isset($_SESSION[$cacheKey], $_SESSION[$cacheKey . '_ts']) &&
+        (time() - $_SESSION[$cacheKey . '_ts']) < $cacheExpiry &&
+        !isset($_POST['save_thresholds']) // force refresh when thresholds change
+    ) {
+        $deptSummary = $_SESSION[$cacheKey];
+    } else {
+        $deptSummary = RiskAssessmentService::getDepartmentSummary($pdo, $dept_id);
+        $_SESSION[$cacheKey] = $deptSummary;
+        $_SESSION[$cacheKey . '_ts'] = time();
+    }
     $total_students     = (int)$deptSummary['total_students'];
     $at_risk_count      = (int)$deptSummary['at_risk_count'];
     $moderate_count     = (int)$deptSummary['moderate_count'];
@@ -270,14 +282,75 @@ if ($dept_id) {
     $courses_stmt->execute($courseParams);
     $courses = $courses_stmt->fetchAll();
 
-    // Attach course-level at-risk analysis for each course
+    // Attach course-level stats using BULK SQL (replaces N+1 getCourseRiskAnalysis calls)
+    $courseIds = array_column($courses, 'id');
+    $courseStatsMap = [];
+    if (!empty($courseIds)) {
+        $inPlaceholders = implode(',', array_fill(0, count($courseIds), '?'));
+        // Bulk fetch avg grades per course
+        $bulkGrades = $pdo->prepare("
+            SELECT sg.subject_id,
+                   ROUND(AVG((COALESCE(sg.prelim_grade,0) + COALESCE(sg.midterm_grade,0) + COALESCE(sg.final_grade,0)) /
+                   GREATEST(1, (sg.prelim_grade IS NOT NULL) + (sg.midterm_grade IS NOT NULL) + (sg.final_grade IS NOT NULL))), 1) AS avg_grade
+            FROM student_grades sg
+            WHERE sg.subject_id IN ($inPlaceholders)
+            AND (sg.prelim_grade IS NOT NULL OR sg.midterm_grade IS NOT NULL OR sg.final_grade IS NOT NULL)
+            GROUP BY sg.subject_id
+        ");
+        $bulkGrades->execute($courseIds);
+        foreach ($bulkGrades->fetchAll() as $row) {
+            $courseStatsMap[$row['subject_id']]['avg_grade'] = $row['avg_grade'];
+        }
+        // Bulk fetch avg attendance per course
+        $bulkAtt = $pdo->prepare("
+            SELECT a.subject_id,
+                   ROUND(SUM(a.status IN ('present','excused') + 0.5*(a.status='late')) / COUNT(*) * 100, 1) AS avg_attendance
+            FROM attendance a
+            WHERE a.subject_id IN ($inPlaceholders)
+            GROUP BY a.subject_id
+        ");
+        $bulkAtt->execute($courseIds);
+        foreach ($bulkAtt->fetchAll() as $row) {
+            $courseStatsMap[$row['subject_id']]['avg_attendance'] = $row['avg_attendance'];
+        }
+        // Bulk fetch avg quiz score per course
+        $bulkQuiz = $pdo->prepare("
+            SELECT q.subject_id, ROUND(AVG(qr.score), 1) AS avg_quiz_score
+            FROM quiz_results qr
+            INNER JOIN quizzes q ON q.id = qr.quiz_id
+            WHERE q.subject_id IN ($inPlaceholders)
+            GROUP BY q.subject_id
+        ");
+        $bulkQuiz->execute($courseIds);
+        foreach ($bulkQuiz->fetchAll() as $row) {
+            $courseStatsMap[$row['subject_id']]['avg_quiz_score'] = $row['avg_quiz_score'];
+        }
+    }
+    // Build at-risk map from already-computed $allStudents (no extra queries!)
+    $courseAtRiskMap = [];
+    foreach ($allStudents as $s) {
+        if (!in_array($s['risk_level'], ['at_risk', 'moderate'])) continue;
+        foreach (($s['courses'] ?? []) as $sc) {
+            $scId = $sc['subject_id'];
+            if (!isset($courseAtRiskMap[$scId])) $courseAtRiskMap[$scId] = [];
+            if ($sc['is_at_risk'] || $s['risk_level'] === 'at_risk') {
+                $courseAtRiskMap[$scId][] = [
+                    'student_id'  => $s['student_id'],
+                    'name'        => $s['name'],
+                    'grade'       => $sc['grade'],
+                    'overall_risk'=> $s['risk_level'],
+                ];
+            }
+        }
+    }
     foreach ($courses as &$c) {
-        $analysis = RiskAssessmentService::getCourseRiskAnalysis($pdo, (int)$c['id'], $dept_id);
-        $c['avg_grade']        = $analysis['avg_grade'] ?? null;
-        $c['avg_quiz_score']   = $analysis['avg_quiz_score'] ?? null;
-        $c['avg_attendance']   = $analysis['avg_attendance'] ?? null;
-        $c['at_risk_count']    = $analysis['at_risk_count'] ?? 0;
-        $c['at_risk_students'] = $analysis['at_risk_students'] ?? [];
+        $cid = (int)$c['id'];
+        $stats = $courseStatsMap[$cid] ?? [];
+        $c['avg_grade']        = $stats['avg_grade'] ?? null;
+        $c['avg_quiz_score']   = $stats['avg_quiz_score'] ?? null;
+        $c['avg_attendance']   = $stats['avg_attendance'] ?? null;
+        $c['at_risk_students'] = $courseAtRiskMap[$cid] ?? [];
+        $c['at_risk_count']    = count($c['at_risk_students']);
         $c['risk_level']       = $c['at_risk_count'] > 0 ? 'At-Risk' : ($c['avg_grade'] !== null && $c['avg_grade'] < $activeThresholds['moderate_grade_threshold'] ? 'Medium' : 'Low');
     }
     unset($c);
