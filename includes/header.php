@@ -1,6 +1,6 @@
 <?php
 $baseUrl = str_replace('\\','/', str_replace(realpath($_SERVER['DOCUMENT_ROOT']), '', realpath(__DIR__ . '/../')));
-$baseUrl = $baseUrl === '' ? '/' : rtrim($baseUrl, '/');
+$baseUrl = rtrim($baseUrl, '/');
 
 $unreadNotifications = 0;
 if (isset($_SESSION['user_id'])) {
