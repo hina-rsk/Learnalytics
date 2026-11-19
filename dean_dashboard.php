@@ -304,7 +304,7 @@ if ($dept_id) {
         // Bulk fetch avg attendance per course
         $bulkAtt = $pdo->prepare("
             SELECT a.subject_id,
-                   ROUND(SUM(a.status IN ('present','excused') + 0.5*(a.status='late')) / COUNT(*) * 100, 1) AS avg_attendance
+                   ROUND(SUM(CASE WHEN a.status='present' THEN 1 WHEN a.status='excused' THEN 1 WHEN a.status='late' THEN 0.5 ELSE 0 END) / COUNT(*) * 100, 1) AS avg_attendance
             FROM attendance a
             WHERE a.subject_id IN ($inPlaceholders)
             GROUP BY a.subject_id
