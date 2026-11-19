@@ -1,4 +1,4 @@
-anti<?php
+<?php
 session_start();
 require_once 'config/database.php';
 require_once 'includes/enrollment_requests.php';
