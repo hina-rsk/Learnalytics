@@ -21,6 +21,9 @@ if (getenv('DB_SSL') === 'true') {
 
 try {
      $pdo = new PDO($dsn, $user, $pass, $options);
+     // Match MariaDB sql_mode: TiDB enforces ONLY_FULL_GROUP_BY by default
+     // which breaks existing GROUP BY queries written for MariaDB
+     $pdo->exec("SET SESSION sql_mode = 'STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
 } catch (\PDOException $e) {
      throw new \PDOException($e->getMessage(), (int)$e->getCode());
 }
